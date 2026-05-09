@@ -1,11 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { Check, Crown, Sparkles } from "lucide-react";
-import { Countdown } from "@/components/sales/Countdown";
-import { FAQ } from "@/components/sales/FAQ";
+import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { StripeCheckout } from "@/components/sales/StripeCheckout";
+import { confirmUpsellIntent } from "@/lib/stripe.functions";
 
 export const Route = createFileRoute("/upsell")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    customerId: (search.customerId as string) ?? "",
+    paymentMethodId: (search.paymentMethodId as string) ?? "",
+  }),
   head: () => ({
     meta: [
       { title: "Offre exclusive — Accompagnement Premium" },
@@ -22,131 +25,409 @@ const upsellFaq = [
   { q: "Quand commencent les séances ?", a: "Vous recevez un lien de prise de rendez-vous immédiatement après votre paiement. Première séance possible dès cette semaine." },
 ];
 
+function format(n: number) {
+  return n.toString().padStart(2, "0");
+}
+
 function UpsellPage() {
   const navigate = useNavigate();
-  const [showCheckout, setShowCheckout] = useState(false);
+  const search = Route.useSearch();
+  const confirmFn = useServerFn(confirmUpsellIntent);
+
+  const [customerId, setCustomerId] = useState(search.customerId);
+  const [paymentMethodId, setPaymentMethodId] = useState(search.paymentMethodId);
+  const [seconds, setSeconds] = useState(600);
+  const [oneClickLoading, setOneClickLoading] = useState(false);
+  const [oneClickError, setOneClickError] = useState<string | null>(null);
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!customerId) {
+      const c = sessionStorage.getItem("upsell_customer_id");
+      if (c) setCustomerId(c);
+    }
+    if (!paymentMethodId) {
+      const p = sessionStorage.getItem("upsell_payment_method_id");
+      if (p) setPaymentMethodId(p);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (seconds <= 0) {
+      navigate({ to: "/thank-you" });
+      return;
+    }
+    const t = setTimeout(() => setSeconds((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [seconds, navigate]);
+
+  const mm = format(Math.floor(seconds / 60));
+  const ss = format(seconds % 60);
+  const hasOneClick = !!customerId && !!paymentMethodId;
+
+  const handleOneClick = async () => {
+    setOneClickLoading(true);
+    setOneClickError(null);
+    try {
+      const r = await confirmFn({ data: { customerId, paymentMethodId } });
+      if (r.success) {
+        navigate({ to: "/thank-you" });
+      } else {
+        setOneClickError(r.error ?? "Paiement refusé");
+        setOneClickLoading(false);
+      }
+    } catch (e: any) {
+      setOneClickError(e?.message ?? "Erreur lors du paiement");
+      setOneClickLoading(false);
+    }
+  };
 
   return (
-    <main className="bg-navy text-white min-h-screen">
-      <div className="bg-success/15 border-b border-success/40 px-4 py-3 text-center">
-        <p className="text-success font-semibold text-sm sm:text-base">
-          ✓ Votre commande est confirmée ! Votre accès arrive par email.
-        </p>
+    <main style={{ background: "#ffffff", minHeight: "100vh", color: "#111" }}>
+      <style>{`
+        @keyframes blink-bar { 0%,100%{opacity:1} 50%{opacity:.4} }
+        @keyframes pulse-cta-red {
+          0% { box-shadow: 0 0 0 0 rgba(224,0,0,0.7); }
+          100% { box-shadow: 0 0 0 16px rgba(224,0,0,0); }
+        }
+        .urgency-bar { animation: blink-bar 1s infinite; }
+        .pulse-red { animation: pulse-cta-red 1.8s infinite; }
+      `}</style>
+
+      {/* Top urgency bar */}
+      <div
+        className="urgency-bar"
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          background: "#e00000",
+          color: "#fff",
+          fontSize: 13,
+          fontWeight: 700,
+          textTransform: "uppercase",
+          textAlign: "center",
+          padding: "10px 12px",
+          zIndex: 50,
+          letterSpacing: 0.5,
+        }}
+      >
+        ⚠️ ATTENTION — CETTE OFFRE EXPIRE DANS {mm}:{ss}
       </div>
 
-      <section className="px-4 pt-12 pb-10 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full bg-gold/15 border border-gold/40 px-3 py-1 text-xs sm:text-sm text-gold font-bold mb-6 uppercase">
-          <Sparkles className="h-4 w-4" /> Offre unique — disparaît dans
-        </div>
-        <div className="mb-6">
-          <Countdown durationSeconds={600} onExpire={() => navigate({ to: "/thank-you" })} />
-        </div>
-        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black max-w-4xl mx-auto leading-tight">
-          Attendez ! Votre commande est validée —{" "}
-          <span className="text-gold">mais vous êtes sur le point de passer à côté</span>{" "}
-          du seul élément qui fait la différence entre perdre 3 kg et en perdre 12.
-        </h1>
-        <p className="mt-6 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-          Cette offre disparaît dans 10 minutes et ne sera{" "}
-          <span className="text-white font-semibold">JAMAIS proposée à ce prix ailleurs</span>.
-        </p>
-      </section>
+      <div style={{ height: 44 }} />
 
-      <section className="px-4 py-16 bg-navy-light">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl sm:text-4xl font-black text-center leading-tight">
-            Voici ce que les femmes qui perdent le plus de poids font différemment…
-          </h2>
-          <div className="mt-8 space-y-4 text-base sm:text-lg text-muted-foreground leading-relaxed">
-            <p>Le programme que vous venez d'acheter va transformer vos nuits. Vous allez activer la Fenêtre Thermogénique et commencer à brûler de la graisse pendant votre sommeil.</p>
-            <p>Mais voici ce que j'ai découvert après avoir accompagné <span className="text-white font-semibold">plus de 300 femmes</span> :</p>
-            <p>Celles qui obtiennent les résultats les plus spectaculaires — 12, 15, même 20 kg perdus — ne font pas que suivre le programme. Elles ont quelqu'un à leurs côtés.</p>
-            <p className="text-white">Quelqu'un qui répond à leurs questions. Qui ajuste le protocole à leur cas particulier. Qui les relance quand la motivation flanche. Qui célèbre chaque kilo perdu avec elles.</p>
-            <p className="text-gold font-semibold">C'est exactement ce que je vous propose aujourd'hui.</p>
+      {/* Confirmation banner */}
+      <div
+        style={{
+          background: "#16a34a",
+          color: "#fff",
+          fontSize: 15,
+          fontWeight: 700,
+          textAlign: "center",
+          padding: "12px 16px",
+        }}
+      >
+        ✓ Votre commande est confirmée — accès envoyé par email
+      </div>
+
+      <div style={{ maxWidth: 640, margin: "0 auto" }}>
+        {/* Headline */}
+        <section style={{ padding: "32px 24px" }}>
+          <h1
+            style={{
+              fontSize: "clamp(28px, 5vw, 42px)",
+              fontWeight: 900,
+              color: "#111",
+              lineHeight: 1.1,
+              margin: 0,
+            }}
+          >
+            Attendez ! Votre commande est validée —{" "}
+            <span style={{ color: "#e00000" }}>
+              mais vous êtes sur le point de passer à côté
+            </span>{" "}
+            du seul élément qui fait la différence entre perdre 3 kg et en
+            perdre 12.
+          </h1>
+
+          <div
+            style={{
+              marginTop: 24,
+              fontSize: 16,
+              fontWeight: 700,
+              lineHeight: 1.7,
+              color: "#111",
+            }}
+          >
+            <p style={{ margin: "0 0 14px" }}>
+              Cette offre vous est proposée{" "}
+              <span style={{ color: "#e00000", fontWeight: 900 }}>
+                une seule fois
+              </span>{" "}
+              et ne sera{" "}
+              <span style={{ color: "#e00000", fontWeight: 900 }}>
+                jamais reproposée
+              </span>{" "}
+              à ce prix.
+            </p>
+            <p style={{ margin: "0 0 14px" }}>
+              Si vous fermez cette page,{" "}
+              <span style={{ color: "#e00000", fontWeight: 900 }}>
+                vous allez rater
+              </span>{" "}
+              le seul élément qui transforme un programme en résultats. C'est
+              votre{" "}
+              <span style={{ color: "#e00000", fontWeight: 900 }}>
+                dernière chance
+              </span>
+              .
+            </p>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="px-4 py-16">
-        <div className="max-w-3xl mx-auto rounded-2xl bg-gradient-to-br from-navy-card to-navy-light border-2 border-gold p-6 sm:p-10 shadow-[0_0_60px_-15px_rgba(245,197,66,0.45)]">
-          <div className="text-center">
-            <Crown className="h-10 w-10 text-gold mx-auto" />
-            <h2 className="mt-3 text-2xl sm:text-4xl font-black">
-              <span className="text-gold">L'ACCOMPAGNEMENT PREMIUM</span> — 8 semaines
-            </h2>
-            <p className="mt-2 text-muted-foreground italic">Votre transformation guidée, pas à pas</p>
+        {/* Feature list */}
+        <section style={{ padding: "0 16px 8px" }}>
+          {[
+            "8 séances individuelles en visio (1h chacune) — protocole adapté à votre morphologie, vos hormones et vos habitudes",
+            "Suivi quotidien par WhatsApp pendant 8 semaines — réponse en moins de 24h",
+            "Plan thermogénique 100% personnalisé créé pour vous",
+            "Analyse de vos blocages hormonaux — on identifie ce qui freine votre perte de poids",
+            "Accès au groupe VIP privé — communauté de femmes qui se soutiennent",
+            "Garantie résultats : -8 kg en 8 semaines ou je continue gratuitement",
+          ].map((it) => (
+            <div
+              key={it}
+              style={{
+                background: "#fff",
+                borderLeft: "3px solid #e00000",
+                padding: 16,
+                marginBottom: 8,
+                color: "#111",
+                fontWeight: 700,
+                fontSize: 15,
+                lineHeight: 1.5,
+                display: "flex",
+                gap: 10,
+              }}
+            >
+              <span style={{ color: "#e00000", fontWeight: 900 }}>✓</span>
+              <span>{it}</span>
+            </div>
+          ))}
+        </section>
+
+        {/* Price block */}
+        <section style={{ padding: "32px 16px 16px", textAlign: "center" }}>
+          <div
+            style={{
+              color: "#999",
+              fontSize: 18,
+              textDecoration: "line-through",
+            }}
+          >
+            197€
           </div>
-
-          <ul className="mt-8 space-y-4">
-            {[
-              "8 séances individuelles en visio (1h chacune) — on adapte le protocole à votre morphologie, vos hormones et vos habitudes exactes",
-              "Suivi quotidien par WhatsApp pendant 8 semaines — je réponds à chaque question en moins de 24h",
-              "Plan thermogénique personnalisé créé pour vous — pas un plan générique, le vôtre, selon votre vie",
-              "Analyse de vos blocages hormonaux — on identifie exactement ce qui freine votre perte de poids",
-              "Accès au groupe VIP privé — communauté de femmes qui se soutiennent",
-              "Garantie résultats : -8 kg en 8 semaines ou je continue à vous accompagner gratuitement",
-            ].map((it) => (
-              <li key={it} className="flex items-start gap-3">
-                <Check className="h-6 w-6 text-gold shrink-0 mt-0.5" />
-                <span className="text-sm sm:text-base">{it}</span>
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-10 text-center">
-            <p className="text-muted-foreground line-through">Valeur réelle : 1 200€</p>
-            <p className="mt-2 text-4xl sm:text-5xl font-black text-gold">Aujourd'hui : 197€</p>
-            <p className="mt-2 text-sm text-muted-foreground">soit moins de 25€ par semaine d'accompagnement</p>
+          <div
+            style={{
+              color: "#e00000",
+              fontSize: 72,
+              fontWeight: 900,
+              lineHeight: 1,
+              marginTop: 4,
+            }}
+          >
+            47€
           </div>
+          <div style={{ color: "#111", fontSize: 14, marginTop: 8 }}>
+            soit moins de 6€ par semaine
+          </div>
+        </section>
 
-          <div className="mt-8 space-y-3">
-            {showCheckout ? (
-              <StripeCheckout mode="upsell" redirectTo="/thank-you" buttonLabel="Confirmer 197€" buttonColor="gold" />
-            ) : (
+        {/* CTA */}
+        <section style={{ padding: "8px 16px 16px" }}>
+          {oneClickError && (
+            <div
+              style={{
+                background: "#fee",
+                color: "#e00000",
+                fontWeight: 700,
+                padding: 12,
+                marginBottom: 10,
+                fontSize: 14,
+                textAlign: "center",
+              }}
+            >
+              {oneClickError}
+            </div>
+          )}
+
+          {hasOneClick ? (
+            <>
               <button
-                onClick={() => setShowCheckout(true)}
-                className="pulse-gold w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gold px-6 py-5 text-base sm:text-lg font-extrabold uppercase tracking-wide text-navy hover:brightness-110 transition"
+                onClick={handleOneClick}
+                disabled={oneClickLoading}
+                className="pulse-red"
+                style={{
+                  width: "100%",
+                  background: "#e00000",
+                  color: "#fff",
+                  fontSize: 20,
+                  fontWeight: 900,
+                  textTransform: "uppercase",
+                  padding: 20,
+                  border: "none",
+                  borderRadius: 0,
+                  cursor: oneClickLoading ? "wait" : "pointer",
+                  opacity: oneClickLoading ? 0.7 : 1,
+                  letterSpacing: 0.5,
+                }}
               >
-                Oui, je veux l'accompagnement premium — 197€ →
+                {oneClickLoading
+                  ? "Traitement…"
+                  : "⚡ OUI — JE VEUX L'ACCOMPAGNEMENT MAINTENANT"}
               </button>
-            )}
+              <p
+                style={{
+                  textAlign: "center",
+                  color: "#e00000",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  marginTop: 8,
+                }}
+              >
+                🔒 Paiement en 1 clic — carte déjà enregistrée
+              </p>
+            </>
+          ) : (
+            <StripeCheckout
+              mode="upsell"
+              redirectTo="/thank-you"
+              buttonLabel="Oui, je veux l'accompagnement — 47€"
+              buttonColor="electric"
+            />
+          )}
 
+          <div style={{ textAlign: "center", marginTop: 20 }}>
             <button
               onClick={() => navigate({ to: "/thank-you" })}
-              className="w-full text-center text-sm text-muted-foreground hover:text-white underline underline-offset-2 py-2"
+              style={{
+                background: "none",
+                border: "none",
+                color: "#999",
+                fontSize: 12,
+                textDecoration: "underline",
+                cursor: "pointer",
+                padding: 4,
+              }}
             >
-              Non merci, je préfère avancer seule sans accompagnement
+              Non merci, je renonce à cette opportunité et je passe à la page
+              suivante
             </button>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="px-4 py-16 bg-navy-light">
-        <div className="max-w-5xl mx-auto">
-          <div className="grid gap-5 md:grid-cols-3">
+        {/* Social proof */}
+        <section style={{ padding: "32px 16px" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr 1fr",
+              textAlign: "center",
+            }}
+          >
             {[
-              { n: "Marie L.", r: "-11 kg en 8 semaines avec l'accompagnement" },
-              { n: "Chloé R.", r: "-9 kg et plus jamais de fringales nocturnes" },
-              { n: "Nathalie B.", r: "-14 kg, l'accompagnement a tout changé" },
-            ].map((t) => (
-              <div key={t.n} className="rounded-xl bg-navy-card border border-gold/30 p-6 text-center">
-                <div className="mx-auto h-16 w-16 rounded-full bg-gold/20 border border-gold/40" />
-                <p className="mt-4 font-bold text-white">{t.n}</p>
-                <p className="mt-2 text-sm text-gold">{t.r}</p>
+              { n: "+ de 300 femmes", l: "accompagnées" },
+              { n: "-8 kg", l: "en 8 semaines en moyenne" },
+              { n: "Garanti", l: "ou remboursé" },
+            ].map((s, i) => (
+              <div
+                key={s.n}
+                style={{
+                  padding: "8px 6px",
+                  borderLeft: i === 0 ? "none" : "1px solid #e5e5e5",
+                }}
+              >
+                <div
+                  style={{
+                    color: "#e00000",
+                    fontWeight: 900,
+                    fontSize: 20,
+                    lineHeight: 1.1,
+                  }}
+                >
+                  {s.n}
+                </div>
+                <div style={{ color: "#111", fontSize: 12, marginTop: 6 }}>
+                  {s.l}
+                </div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="px-4 py-16">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-black text-center mb-8">Questions fréquentes</h2>
-          <FAQ items={upsellFaq} />
-        </div>
-      </section>
+        {/* FAQ */}
+        <section style={{ padding: "16px 16px 48px" }}>
+          <h2
+            style={{
+              fontSize: 24,
+              fontWeight: 900,
+              color: "#111",
+              textAlign: "center",
+              margin: "0 0 16px",
+            }}
+          >
+            Questions fréquentes
+          </h2>
+          <div>
+            {upsellFaq.map((it, i) => {
+              const isOpen = openFaq === i;
+              return (
+                <div
+                  key={it.q}
+                  style={{
+                    background: "#fff",
+                    marginBottom: 8,
+                    border: "1px solid #eee",
+                  }}
+                >
+                  <button
+                    onClick={() => setOpenFaq(isOpen ? null : i)}
+                    style={{
+                      width: "100%",
+                      background: "none",
+                      border: "none",
+                      textAlign: "left",
+                      padding: 14,
+                      fontWeight: 900,
+                      color: "#111",
+                      fontSize: 15,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {it.q}
+                  </button>
+                  {isOpen && (
+                    <div
+                      style={{
+                        padding: 14,
+                        borderLeft: "2px solid #e00000",
+                        color: "#111",
+                        fontSize: 14,
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {it.a}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      </div>
     </main>
   );
 }
-
-
