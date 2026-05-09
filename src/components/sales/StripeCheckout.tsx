@@ -20,7 +20,12 @@ interface Props {
   buttonColor?: "electric" | "gold";
 }
 
-function InnerForm({ redirectTo, buttonLabel, buttonColor = "electric" }: Omit<Props, "mode">) {
+function InnerForm({
+  redirectTo,
+  buttonLabel,
+  buttonColor = "electric",
+  customerId,
+}: Omit<Props, "mode"> & { customerId: string }) {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
@@ -42,7 +47,22 @@ function InnerForm({ redirectTo, buttonLabel, buttonColor = "electric" }: Omit<P
       return;
     }
     if (paymentIntent?.status === "succeeded") {
-      navigate({ to: redirectTo });
+      const pmRaw = paymentIntent.payment_method;
+      const paymentMethodId =
+        typeof pmRaw === "string" ? pmRaw : (pmRaw as any)?.id ?? "";
+      try {
+        if (typeof window !== "undefined") {
+          if (customerId) sessionStorage.setItem("upsell_customer_id", customerId);
+          if (paymentMethodId)
+            sessionStorage.setItem("upsell_payment_method_id", paymentMethodId);
+        }
+      } catch {
+        /* ignore */
+      }
+      navigate({
+        to: redirectTo,
+        search: { customerId, paymentMethodId } as any,
+      });
       return;
     }
     setLoading(false);
@@ -87,6 +107,7 @@ export function StripeCheckout({
 }: Props & { email?: string; name?: string; orderBump?: boolean }) {
   const [pk, setPk] = useState<string>("");
   const [clientSecret, setClientSecret] = useState<string>("");
+  const [customerId, setCustomerId] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const fetchPk = useServerFn(getPublishableKey);
   const fetchMain = useServerFn(createMainIntent);
@@ -104,7 +125,10 @@ export function StripeCheckout({
           mode === "main"
             ? await fetchMain({ data: { orderBump: !!orderBump, email, name } })
             : await fetchUpsell({ data: { email, name } });
-        if (!cancelled) setClientSecret(r.clientSecret ?? "");
+        if (!cancelled) {
+          setClientSecret(r.clientSecret ?? "");
+          setCustomerId(r.customerId ?? "");
+        }
       } catch {
         if (!cancelled) setError("Impossible de préparer le paiement.");
       }
@@ -147,9 +171,12 @@ export function StripeCheckout({
         },
       }}
     >
-      <InnerForm redirectTo={redirectTo} buttonLabel={buttonLabel} buttonColor={buttonColor} />
+      <InnerForm
+        redirectTo={redirectTo}
+        buttonLabel={buttonLabel}
+        buttonColor={buttonColor}
+        customerId={customerId}
+      />
     </Elements>
   );
 }
-
-
