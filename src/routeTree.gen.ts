@@ -9,38 +9,82 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UpsellRouteImport } from './routes/upsell'
+import { Route as ThankYouRouteImport } from './routes/thank-you'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiWebhookRouteImport } from './routes/api/webhook'
 
+const UpsellRoute = UpsellRouteImport.update({
+  id: '/upsell',
+  path: '/upsell',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ThankYouRoute = ThankYouRouteImport.update({
+  id: '/thank-you',
+  path: '/thank-you',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWebhookRoute = ApiWebhookRouteImport.update({
+  id: '/api/webhook',
+  path: '/api/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/thank-you': typeof ThankYouRoute
+  '/upsell': typeof UpsellRoute
+  '/api/webhook': typeof ApiWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/thank-you': typeof ThankYouRoute
+  '/upsell': typeof UpsellRoute
+  '/api/webhook': typeof ApiWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/thank-you': typeof ThankYouRoute
+  '/upsell': typeof UpsellRoute
+  '/api/webhook': typeof ApiWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/thank-you' | '/upsell' | '/api/webhook'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/thank-you' | '/upsell' | '/api/webhook'
+  id: '__root__' | '/' | '/thank-you' | '/upsell' | '/api/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ThankYouRoute: typeof ThankYouRoute
+  UpsellRoute: typeof UpsellRoute
+  ApiWebhookRoute: typeof ApiWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/upsell': {
+      id: '/upsell'
+      path: '/upsell'
+      fullPath: '/upsell'
+      preLoaderRoute: typeof UpsellRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/thank-you': {
+      id: '/thank-you'
+      path: '/thank-you'
+      fullPath: '/thank-you'
+      preLoaderRoute: typeof ThankYouRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,12 +92,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/webhook': {
+      id: '/api/webhook'
+      path: '/api/webhook'
+      fullPath: '/api/webhook'
+      preLoaderRoute: typeof ApiWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ThankYouRoute: ThankYouRoute,
+  UpsellRoute: UpsellRoute,
+  ApiWebhookRoute: ApiWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
