@@ -187,9 +187,32 @@ function SalesPage() {
             <img
               src="/cover.png"
               alt="La Fenêtre Thermogénique Féminine — couverture"
-              className="w-64 sm:w-80 rounded-2xl shadow-[0_0_40px_-10px_rgba(43,107,255,0.6)] border border-electric/30"
+              className="neon-cover-index w-64 sm:w-80"
             />
           </div>
+          <style>{`
+            @keyframes neon-pulse-index {
+              0%, 100% {
+                box-shadow:
+                  0 0 8px #1e3a8a,
+                  0 0 20px #2b6bff,
+                  0 0 40px #2b6bff,
+                  0 0 80px rgba(43,107,255,0.6);
+              }
+              50% {
+                box-shadow:
+                  0 0 4px #1e3a8a,
+                  0 0 10px #2b6bff,
+                  0 0 20px #2b6bff,
+                  0 0 40px rgba(43,107,255,0.4);
+              }
+            }
+            .neon-cover-index {
+              border: 2px solid #2b6bff;
+              border-radius: 16px;
+              animation: neon-pulse-index 2.5s ease-in-out infinite;
+            }
+          `}</style>
           <ul className="mt-10 space-y-4">
             {["Programme complet La Fenêtre Thermogénique (6 modules)","Guide PDF téléchargeable (60 pages)","Checklist soir imprimable (routine en 5 étapes)","Liste des aliments thermogéniques","Accès à vie aux mises à jour","Groupe privé de soutien"].map((it) => (
               <li key={it} className="flex items-start gap-3 rounded-lg bg-navy-card border border-border p-4">
