@@ -5,6 +5,7 @@ import { Countdown } from "@/components/sales/Countdown";
 import { BeforeAfter } from "@/components/sales/BeforeAfter";
 import { FAQ } from "@/components/sales/FAQ";
 import { StripeCheckout } from "@/components/sales/StripeCheckout";
+import { ZoomableImage } from "@/components/sales/ZoomableImage";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -145,9 +146,24 @@ function SalesPage() {
             Elles l'ont testé. <span className="text-electric">Voici leurs résultats.</span>
           </h2>
           <div className="mt-12 grid gap-6 md:grid-cols-3">
-            <BeforeAfter name="Sophie M." quote="J'ai perdu 4 kg en 3 semaines sans rien changer à mon alimentation. Je dors mieux et je me réveille en forme." />
-            <BeforeAfter name="Laura K." quote="Après 3 enfants, je pensais que c'était impossible. -6 kg en 6 semaines, et surtout : plus de fatigue le matin." />
-            <BeforeAfter name="Isabelle T." quote="J'ai 52 ans. -8 kg en 2 mois. La ménopause n'est plus une fatalité." />
+            <BeforeAfter
+              name="Sophie M."
+              quote="J'ai perdu 4 kg en 3 semaines sans rien changer à mon alimentation. Je dors mieux et je me réveille en forme."
+              beforeSrc="/sophie-avant.jpg"
+              afterSrc="/sophie-apres.jpg"
+            />
+            <BeforeAfter
+              name="Laura K."
+              quote="Après 3 enfants, je pensais que c'était impossible. -6 kg en 6 semaines, et surtout : plus de fatigue le matin."
+              beforeSrc="/laura-avant.jpg"
+              afterSrc="/laura-apres.jpg"
+            />
+            <BeforeAfter
+              name="Isabelle T."
+              quote="J'ai 52 ans. -8 kg en 2 mois. La ménopause n'est plus une fatalité."
+              beforeSrc="/isabelle-avant.jpg"
+              afterSrc="/isabelle-apres.jpg"
+            />
           </div>
         </div>
       </section>
@@ -184,11 +200,17 @@ function SalesPage() {
             Ce que vous recevez <span className="text-electric">aujourd'hui</span>
           </h2>
           <div className="mt-10 mb-8 flex justify-center">
-            <img
+            <ZoomableImage
               src="/cover.png"
               alt="La Fenêtre Thermogénique Féminine — couverture"
-              className="neon-cover-index w-64 sm:w-80"
-            />
+              imgClassName="neon-cover-index w-64 sm:w-80"
+            >
+              <img
+                src="/cover.png"
+                alt="La Fenêtre Thermogénique Féminine — couverture"
+                className="neon-cover-index w-64 sm:w-80"
+              />
+            </ZoomableImage>
           </div>
           <style>{`
             @keyframes neon-pulse-index {
