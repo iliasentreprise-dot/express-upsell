@@ -183,6 +183,13 @@ function SalesPage() {
           <h2 className="text-3xl sm:text-5xl font-black text-center">
             Ce que vous recevez <span className="text-electric">aujourd'hui</span>
           </h2>
+          <div className="mt-10 mb-8 flex justify-center">
+            <img
+              src="/cover.png"
+              alt="La Fenêtre Thermogénique Féminine — couverture"
+              className="w-64 sm:w-80 rounded-2xl shadow-[0_0_40px_-10px_rgba(43,107,255,0.6)] border border-electric/30"
+            />
+          </div>
           <ul className="mt-10 space-y-4">
             {["Programme complet La Fenêtre Thermogénique (6 modules)","Guide PDF téléchargeable (60 pages)","Checklist soir imprimable (routine en 5 étapes)","Liste des aliments thermogéniques","Accès à vie aux mises à jour","Groupe privé de soutien"].map((it) => (
               <li key={it} className="flex items-start gap-3 rounded-lg bg-navy-card border border-border p-4">
@@ -248,7 +255,27 @@ function SalesPage() {
             </select>
           </div>
 
-          <label className="mt-6 block cursor-pointer rounded-xl border-2 border-dashed border-electric bg-electric/10 p-5">
+          <div className="mt-8 flex justify-center gap-4 text-3xl text-electric">
+            {["⬇", "⬇", "⬇"].map((a, i) => (
+              <span
+                key={i}
+                style={{
+                  animation: "blink-arrow 1s ease-in-out infinite",
+                  animationDelay: `${i * 0.15}s`,
+                }}
+              >
+                {a}
+              </span>
+            ))}
+          </div>
+          <style>{`
+            @keyframes blink-arrow {
+              0%, 100% { opacity: 1; transform: translateY(0); }
+              50% { opacity: 0.2; transform: translateY(4px); }
+            }
+          `}</style>
+
+          <label className="mt-4 block cursor-pointer rounded-xl border-4 border-electric bg-electric/15 p-6 shadow-[0_0_30px_-5px_rgba(43,107,255,0.6)]">
             <div className="flex items-start gap-3">
               <input
                 type="checkbox"
@@ -256,21 +283,22 @@ function SalesPage() {
                 onChange={(e) => { setBump(e.target.checked); setShowStripe(false); }}
                 className="mt-1 h-5 w-5 accent-[#2b6bff]"
               />
-              <div>
-                <p className="font-bold text-electric uppercase tracking-wide text-sm">
-                  Oui, j'ajoute le Pack Accélérateur à 7,80€
+              <div className="flex-1">
+                <p className="font-black text-white uppercase tracking-wide text-base bg-red-600 px-3 py-2 rounded-md inline-block">
+                  ⚠️ NE PASSEZ PAS À CÔTÉ — Offre unique, non reproposée
                 </p>
-                <p className="mt-2 font-extrabold text-white text-base">
-                  <Zap className="inline h-4 w-4 text-gold" /> PACK ACCÉLÉRATEUR — Résultats x2 en 14 jours
+                <p className="mt-3 font-extrabold text-electric text-lg sm:text-xl">
+                  <Zap className="inline h-5 w-5" /> PACK ACCÉLÉRATEUR — Résultats x2 en 14 jours
                 </p>
-                <ul className="mt-2 text-sm text-muted-foreground space-y-1">
+                <ul className="mt-3 text-sm sm:text-base text-white/90 space-y-1.5 font-medium">
                   <li>• Séance audio guidée d'endormissement thermogénique (20 min)</li>
                   <li>• Plan repas 7 jours spécial Fenêtre Thermogénique</li>
                   <li>• Tracker de sommeil et perte de poids (Excel + PDF)</li>
                 </ul>
-                <p className="mt-3 text-sm">
-                  <span className="font-bold text-white">+7,80€ seulement</span>{" "}
-                  <span className="text-muted-foreground">(valeur réelle : 37€)</span>
+                <p className="mt-4 text-base">
+                  <span className="font-black text-white text-xl">+7,80€ seulement</span>{" "}
+                  <span className="text-muted-foreground line-through">(valeur réelle : 37€)</span>
+                  <span className="block mt-1 text-electric font-bold uppercase tracking-wide text-sm">— ajout en 1 clic ici ☝️</span>
                 </p>
               </div>
             </div>

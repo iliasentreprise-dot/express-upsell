@@ -1,22 +1,19 @@
 import { useRef, useState } from "react";
-import { Upload } from "lucide-react";
 
 function Slot({ label }: { label: string }) {
   const [src, setSrc] = useState<string | null>(null);
   const ref = useRef<HTMLInputElement>(null);
+  const placeholder = `https://placehold.co/400x533/0a0e2a/2b6bff?text=${encodeURIComponent(label)}`;
   return (
     <div
       onClick={() => ref.current?.click()}
       className="group relative aspect-[3/4] flex flex-col items-center justify-center cursor-pointer rounded-lg border-2 border-dashed border-electric/40 bg-navy hover:border-electric transition-colors overflow-hidden"
     >
-      {src ? (
-        <img src={src} alt={label} className="absolute inset-0 w-full h-full object-cover" />
-      ) : (
-        <div className="flex flex-col items-center gap-2 text-muted-foreground group-hover:text-electric">
-          <Upload className="h-7 w-7" />
-          <span className="text-xs">Cliquer pour ajouter</span>
-        </div>
-      )}
+      <img
+        src={src ?? placeholder}
+        alt={label}
+        className="absolute inset-0 w-full h-full object-cover"
+      />
       <span className="absolute top-2 left-2 text-[10px] font-bold tracking-widest bg-electric text-white px-2 py-0.5 rounded">
         {label}
       </span>
