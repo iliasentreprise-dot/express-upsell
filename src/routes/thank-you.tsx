@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle2 } from "lucide-react";
+import { ZoomableImage } from "@/components/sales/ZoomableImage";
 
 export const Route = createFileRoute("/thank-you")({
   head: () => ({
@@ -70,17 +71,16 @@ function ThankYou() {
 
         {/* Neon cover image */}
         <div className="mt-10 flex justify-center">
-          <div className="relative inline-block">
+          <ZoomableImage src="/cover.png" alt="La Fenêtre Thermogénique Féminine" className="relative inline-block">
             <img
               src="/cover.png"
               alt="La Fenêtre Thermogénique Féminine"
               className="neon-cover w-64 sm:w-80 relative z-10"
             />
-            {/* Shimmer overlay */}
             <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none z-20">
               <div className="shimmer-line absolute -inset-y-1/2 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
             </div>
-          </div>
+          </ZoomableImage>
         </div>
 
         <p className="mt-10 text-sm text-muted-foreground">
