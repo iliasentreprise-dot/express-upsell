@@ -183,6 +183,13 @@ function SalesPage() {
           <h2 className="text-3xl sm:text-5xl font-black text-center">
             Ce que vous recevez <span className="text-electric">aujourd'hui</span>
           </h2>
+          <div className="mt-10 mb-8 flex justify-center">
+            <img
+              src="/cover.png"
+              alt="La Fenêtre Thermogénique Féminine — couverture"
+              className="w-64 sm:w-80 rounded-2xl shadow-[0_0_40px_-10px_rgba(43,107,255,0.6)] border border-electric/30"
+            />
+          </div>
           <ul className="mt-10 space-y-4">
             {["Programme complet La Fenêtre Thermogénique (6 modules)","Guide PDF téléchargeable (60 pages)","Checklist soir imprimable (routine en 5 étapes)","Liste des aliments thermogéniques","Accès à vie aux mises à jour","Groupe privé de soutien"].map((it) => (
               <li key={it} className="flex items-start gap-3 rounded-lg bg-navy-card border border-border p-4">
