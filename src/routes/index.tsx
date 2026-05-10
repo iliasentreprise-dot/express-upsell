@@ -60,6 +60,7 @@ function SalesPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [country, setCountry] = useState("FR");
+  const [showStripe, setShowStripe] = useState(false);
 
   const total = bump ? 25.6 : 17.8;
   const [deadline, setDeadline] = useState<Date | null>(null);
@@ -222,13 +223,13 @@ function SalesPage() {
           <div className="mt-8 space-y-3">
             <input
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => { setName(e.target.value); setShowStripe(false); }}
               placeholder="Nom complet"
               className="w-full rounded-lg bg-navy border border-border px-4 py-3 text-white placeholder:text-muted-foreground focus:outline-none focus:border-electric"
             />
             <input
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => { setEmail(e.target.value); setShowStripe(false); }}
               type="email"
               placeholder="Email"
               className="w-full rounded-lg bg-navy border border-border px-4 py-3 text-white placeholder:text-muted-foreground focus:outline-none focus:border-electric"
@@ -252,7 +253,7 @@ function SalesPage() {
               <input
                 type="checkbox"
                 checked={bump}
-                onChange={(e) => setBump(e.target.checked)}
+                onChange={(e) => { setBump(e.target.checked); setShowStripe(false); }}
                 className="mt-1 h-5 w-5 accent-[#2b6bff]"
               />
               <div>
@@ -283,14 +284,24 @@ function SalesPage() {
           </div>
 
           <div className="mt-6">
-            <StripeCheckout
-              mode="main"
-              redirectTo="/upsell"
-              buttonLabel="Oui, j'accède au programme"
-              email={email}
-              name={name}
-              orderBump={bump}
-            />
+            {!showStripe ? (
+              <button
+                onClick={() => setShowStripe(true)}
+                className="pulse-cta w-full inline-flex items-center justify-center gap-2 rounded-lg bg-electric px-6 py-4 text-base sm:text-lg font-extrabold uppercase tracking-wide text-white hover:brightness-110 transition"
+              >
+                <Lock className="h-5 w-5" />
+                Procéder au paiement sécurisé
+              </button>
+            ) : (
+              <StripeCheckout
+                mode="main"
+                redirectTo="/upsell"
+                buttonLabel="Oui, j'accède au programme"
+                email={email}
+                name={name}
+                orderBump={bump}
+              />
+            )}
           </div>
         </div>
       </section>
