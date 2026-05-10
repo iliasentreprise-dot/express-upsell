@@ -72,14 +72,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "PerdreDuPoidsEnDormant" },
+      { name: "description", content: "Perd du poids en appliquant la méthode de la fenêtre métabolique féminine" },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "PerdreDuPoidsEnDormant" },
+      { property: "og:description", content: "Perd du poids en appliquant la méthode de la fenêtre métabolique féminine" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "PerdreDuPoidsEnDormant" },
+      { name: "twitter:description", content: "Perd du poids en appliquant la méthode de la fenêtre métabolique féminine" },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d8ef2ad8-35ec-4966-ad5d-5daa26f8d135/id-preview-f257d819--de5c025f-f75d-43c6-80b4-df6e6176070d.lovable.app-1778375514472.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d8ef2ad8-35ec-4966-ad5d-5daa26f8d135/id-preview-f257d819--de5c025f-f75d-43c6-80b4-df6e6176070d.lovable.app-1778375514472.png" },
     ],
     links: [
       {
